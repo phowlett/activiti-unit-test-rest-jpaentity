@@ -1,1 +1,1 @@
-This is a Maven project which can be used as template when creating a unit test for Activiti.
+Unit test for use of JPA Entities as process variables via the Activiti REST API.
