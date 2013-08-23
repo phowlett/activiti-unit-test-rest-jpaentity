@@ -46,22 +46,25 @@ public class JpaRestTest extends SpringActivitiTestCase {
 	@Test
 	@Deployment(resources = {"org/activiti/rest/api/jpa/jpa-process.bpmn20.xml"})
 	public void testGetJpaVariableViaTaskVariablesCollections() throws Exception {
-		
+
+		// Get JPA managed entity through the repository
 		Message message = messageRepository.findOne(1L);
 		assertNotNull(message);
 		assertEquals("Hello World", message.getText());
 		
+		// add the entity to the process variables and start the process
 		Map<String, Object> processVariables = new HashMap<String, Object>();
 	    processVariables.put("message", message);
 	    
 		ProcessInstance processInstance = processEngine.getRuntimeService().startProcessInstanceByKey("jpa-process", processVariables);
 		assertNotNull(processInstance);
+		// create the user required by the REST API authentication
 		createUsers(processEngine);
 		
 		Task task = processEngine.getTaskService().createTaskQuery().singleResult();
 		assertEquals("Activiti is awesome!", task.getName());
 		
-		 // Request all variables (no scope provides) which include global an local
+		 // Request all variables (no scope provides) which include global and local
 	    ClientResource client = getAuthenticatedClient(RestUrls.createRelativeResourceUrl(RestUrls.URL_TASK_VARIABLES_COLLECTION, task.getId()));
 	    Representation response = client.get();
 	    assertEquals(Status.SUCCESS_OK, client.getResponse().getStatus());
@@ -69,35 +72,41 @@ public class JpaRestTest extends SpringActivitiTestCase {
 	    JsonNode responseNode = objectMapper.readTree(response.getStream()).get(0);
 	    System.out.println(responseNode.toString());
 	    
+	    // check for message variable of type serializable
 	    assertNotNull(responseNode);
 	    assertEquals("message", responseNode.get("name").asText());
 	    assertEquals("global", responseNode.get("scope").asText());
 	    assertEquals("serializable", responseNode.get("type").asText());
 	    assertNotNull(responseNode.get("valueUrl"));
 	    
+	    // drop the users to clear the DB
 	    dropUsers(processEngine);
 	}
 	
 	@Test
 	@Deployment(resources = {"org/activiti/rest/api/jpa/jpa-process.bpmn20.xml"})
 	public void testGetJpaVariableViaTaskCollection() throws Exception {
-		
+
+		// Get JPA managed entity through the repository
 		Message message = messageRepository.findOne(1L);
 		assertNotNull(message);
 		assertEquals("Hello World", message.getText());
 		
+		// add the entity to the process variables and start the process
 		Map<String, Object> processVariables = new HashMap<String, Object>();
 		processVariables.put("message", message);
 	    
 		ProcessInstance processInstance = processEngine.getRuntimeService().startProcessInstanceByKey("jpa-process", processVariables);
 		assertNotNull(processInstance);
+		// create the user required by the REST API authentication
 		createUsers(processEngine);
 		
 		Task task = processEngine.getTaskService().createTaskQuery().singleResult();
 		assertEquals("Activiti is awesome!", task.getName());
 		
-		 // Request all variables (no scope provides) which include global an local
+		// Request all variables (no scope provides) which include global and local
 	    ClientResource client = getAuthenticatedClient(RestUrls.createRelativeResourceUrl(RestUrls.URL_TASK_COLLECTION));
+	    // add a query parameter to ensure process variables are requested with the Task Collection
 	    client.getReference().addQueryParameter("includeProcessVariables", "true");
 	    Representation response = client.get();
 	    assertEquals(Status.SUCCESS_OK, client.getResponse().getStatus());
@@ -109,12 +118,15 @@ public class JpaRestTest extends SpringActivitiTestCase {
 	    JsonNode variableNode = dataNode.get("variables").get(0);
 	    assertNotNull(variableNode);
 	    System.out.println(variableNode.toString());
+	    
+	    // check for message variable of type serializable
 	    assertEquals("message", variableNode.get("name").asText());
 	    assertEquals("global", variableNode.get("scope").asText());
 
 	    assertEquals("serializable", variableNode.get("type").asText());
 	    assertNotNull(variableNode.get("valueUrl"));
 	    
+	    // drop the users to clear the DB
 	    dropUsers(processEngine);
 	}
 	
