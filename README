@@ -1,2 +1,2 @@
 Unit test for use of JPA Entities as process variables via the Activiti REST API.
-See https://jira.codehaus.org/browse/ACT-1775 for related issue in Activiti 5.13
+See https://jira.codehaus.org/browse/ACT-1775 for related issue in Activiti 5.13.
